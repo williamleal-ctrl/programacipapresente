@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>CIPA Presente · Cubbo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700;800&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0C12;
+    --card:#151926;
+    --card-2:#1B2033;
+    --blue:#0938F4;
+    --blue-soft:#4C6BFF;
+    --amber:#FFB020;
+    --orange:#FF8A3D;
+    --red:#FF4B4B;
+    --green:#22C55E;
+    --text:#F3F4F8;
+    --muted:#868BA3;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.18);
+    --glow: var(--blue-soft);
+    --glow-soft: rgba(76,107,255,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  /* ambient radar sweep + dot grid */
+  .ambient{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 26px 26px;
+  }
+  .radar-sweep{
+    position:fixed; top:-50%; left:-50%; width:200%; height:200%;
+    background:conic-gradient(from 0deg, transparent 0deg, var(--glow-soft) 8deg, transparent 40deg, transparent 360deg);
+    opacity:0.5;
+    animation:sweep 7s linear infinite;
+    pointer-events:none;
+    z-index:0;
+    transition:background 0.4s ease;
+  }
+  @keyframes sweep{ to{ transform:rotate(360deg); } }
+
+  .device{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    background:transparent;
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---- Top dispatch bar ---- */
+  .dispatch-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 20px;
+    border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    color:var(--muted);
+  }
+  .dispatch-bar .live{
+    display:flex; align-items:center; gap:7px;
+    text-transform:uppercase;
+  }
+  .live-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 0 rgba(34,197,94,0.6);
+    animation:blip 1.8s ease-in-out infinite;
+  }
+  @keyframes blip{
+    0%{box-shadow:0 0 0 0 rgba(34,197,94,0.55);}
+    70%{box-shadow:0 0 0 7px rgba(34,197,94,0);}
+    100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}
+  }
+
+  /* ---- Beacon ---- */
+  .header{
+    padding:20px 22px 16px;
+    text-align:center;
+  }
+  .beacon-wrap{
+    display:flex; justify-content:center; margin-bottom:16px;
+  }
+  .beacon{
+    width:64px;height:64px;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .beacon-ring{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border:1.5px solid var(--glow);
+    opacity:0.5;
+    animation:ring-pulse 2.2s ease-out infinite;
+    transition:border-color 0.4s ease;
+  }
+  .beacon-ring.d2{animation-delay:0.7s;}
+  .beacon-ring.d3{animation-delay:1.4s;}
+  @keyframes ring-pulse{
+    0%{ transform:scale(0.5); opacity:0.55; }
+    100%{ transform:scale(1.6); opacity:0; }
+  }
+  .beacon-core{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--glow);
+    box-shadow:0 0 18px 4px var(--glow-soft), 0 0 40px 10px var(--glow-soft);
+    transition:background 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  .eyebrow{
+    font-family:'Share Tech Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Archivo Expanded',sans-serif;
+    font-weight:800;
+    font-size:36px;
+    line-height:0.92;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  h1 span{color:var(--glow); transition:color 0.4s ease;}
+  .subtitle{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:500;
+    font-size:17px;
+    color:var(--muted);
+    line-height:1.35;
+    max-width:320px;
+    margin:0 auto;
+  }
+
+  .form-wrap{
+    padding:8px 22px 40px;
+    flex:1;
+  }
+
+  .console{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:22px 20px;
+    box-shadow:0 0 0 1px transparent, 0 20px 50px -20px var(--glow-soft);
+    transition:box-shadow 0.4s ease;
+  }
+
+  .field{ margin-bottom:20px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{
+    display:block;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    letter-spacing:0.02em;
+    color:var(--text);
+    margin-bottom:9px;
+    text-transform:uppercase;
+  }
+  .field .hint{
+    font-size:12px;
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    text-transform:none;
+    display:block;
+    margin-top:6px;
+  }
+
+  select, textarea{
+    width:100%;
+    background:var(--card-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:12px;
+    padding:14px 16px;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    appearance:none;
+    -webkit-appearance:none;
+    transition:border-color 0.15s ease;
+  }
+  select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--glow-soft);
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1L7 7L13 1' stroke='%23868BA3' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 16px center;
+    cursor:pointer;
+  }
+  textarea{
+    resize:vertical;
+    min-height:90px;
+    line-height:1.5;
+  }
+
+  /* live waveform while typing description */
+  .waveform{
+    display:flex;
+    align-items:flex-end;
+    gap:2.5px;
+    height:18px;
+    margin-top:8px;
+    opacity:0.35;
+    transition:opacity 0.2s ease;
+  }
+  .waveform.active{ opacity:1; }
+  .waveform span{
+    width:3px;
+    background:var(--glow);
+    border-radius:2px;
+    height:20%;
+    transition:background 0.4s ease;
+  }
+  .waveform.active span{ animation:wave 0.9s ease-in-out infinite; }
+  .waveform span:nth-child(1){animation-delay:0s;}
+  .waveform span:nth-child(2){animation-delay:0.1s;}
+  .waveform span:nth-child(3){animation-delay:0.2s;}
+  .waveform span:nth-child(4){animation-delay:0.3s;}
+  .waveform span:nth-child(5){animation-delay:0.15s;}
+  .waveform span:nth-child(6){animation-delay:0.25s;}
+  .waveform span:nth-child(7){animation-delay:0.05s;}
+  .waveform span:nth-child(8){animation-delay:0.35s;}
+  @keyframes wave{
+    0%,100%{ height:20%; }
+    50%{ height:100%; }
+  }
+
+  .pill-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .pill{
+    border:1px solid var(--border);
+    background:var(--card-2);
+    color:var(--text);
+    border-radius:12px;
+    padding:12px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:500;
+    text-align:left;
+    cursor:pointer;
+    transition:all 0.15s ease;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    line-height:1.2;
+  }
+  .pill .ico{font-size:15px;line-height:1;flex-shrink:0;}
+  .pill.active{
+    border-color:var(--glow);
+    background:linear-gradient(180deg, var(--glow-soft), transparent);
+    box-shadow:0 0 0 1px var(--glow) inset, 0 0 14px -2px var(--glow-soft);
+  }
+
+  .urgency-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .urg-btn{
+    border:1px solid var(--border);
+    background:var(--card-2);
+    border-radius:10px;
+    padding:11px 4px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    color:var(--muted);
+    letter-spacing:0.01em;
+    transition:all 0.15s ease;
+  }
+  .urg-btn[data-level="baixa"].active{border-color:var(--green);color:var(--green);background:rgba(34,197,94,0.12);}
+  .urg-btn[data-level="media"].active{border-color:var(--amber);color:var(--amber);background:rgba(255,176,32,0.12);}
+  .urg-btn[data-level="alta"].active{border-color:var(--orange);color:var(--orange);background:rgba(255,138,61,0.12);}
+  .urg-btn[data-level="critica"].active{
+    border-color:var(--red);color:#fff;background:var(--red);
+    animation:pulse-critical 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-critical{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,75,75,0.55);}
+    50%{box-shadow:0 0 0 8px rgba(255,75,75,0);}
+  }
+
+  .photo-btn{
+    width:100%;
+    background:var(--card-2);
+    border:1.5px dashed var(--border-strong);
+    border-radius:12px;
+    padding:16px;
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    cursor:pointer;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  .photo-btn:hover{border-color:var(--glow-soft);color:var(--text);}
+  .photo-preview{
+    margin-top:10px;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    display:none;
+  }
+  .photo-preview img{width:100%;display:block;}
+
+  .submit-btn{
+    width:100%;
+    background:var(--glow);
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:18px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    cursor:pointer;
+    margin-top:22px;
+    transition:transform 0.1s ease, background 0.4s ease, box-shadow 0.4s ease;
+    box-shadow:0 8px 28px -8px var(--glow-soft);
+  }
+  .submit-btn:active{transform:scale(0.98);}
+  .submit-btn:disabled{
+    background:#2A2E3D;
+    box-shadow:none;
+    color:var(--muted);
+    cursor:not-allowed;
+  }
+
+  /* ---- Confirmation ---- */
+  .confirm-screen{
+    display:none;
+    flex:1;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 22px;
+  }
+  .signal-sent{
+    width:80px;height:80px;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:22px;
+  }
+  .signal-sent .ring{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border:1.5px solid var(--green);
+    animation:ring-pulse 1.8s ease-out infinite;
+  }
+  .signal-sent .ring.d2{animation-delay:0.5s;}
+  .signal-sent .check{
+    width:40px;height:40px;border-radius:50%;
+    background:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;color:#08130C;font-weight:700;
+    box-shadow:0 0 20px 4px rgba(34,197,94,0.4);
+  }
+  .confirm-title{
+    font-family:'Archivo Expanded',sans-serif;
+    font-weight:800;
+    font-size:22px;
+    text-align:center;
+    margin:0 0 6px;
+  }
+  .confirm-sub{
+    font-family:'Inter',sans-serif;
+    color:var(--muted);
+    font-size:14px;
+    text-align:center;
+    margin-bottom:32px;
+  }
+
+  .ticket{
+    width:100%;
+    background:var(--card);
+    border-radius:18px;
+    position:relative;
+    padding:26px 24px 22px;
+    border:1px solid var(--border);
+    box-shadow:0 20px 50px -25px var(--glow-soft);
+  }
+  .ticket::before, .ticket::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    width:26px;height:13px;
+    background:var(--bg);
+    border-radius:50px;
+  }
+  .ticket::before{ top:-1px; border-radius:0 0 50px 50px; }
+  .ticket::after{ bottom:-1px; border-radius:50px 50px 0 0; }
+  .ticket-perf{ border-top:1.5px dashed var(--border-strong); margin:18px 0; }
+  .ticket-num-label{
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .ticket-num{
+    font-family:'Share Tech Mono',monospace;
+    font-size:40px;
+    font-weight:700;
+    color:var(--amber);
+    line-height:1;
+    margin-bottom:4px;
+    text-shadow:0 0 20px rgba(255,176,32,0.35);
+  }
+  .ticket-brand{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .ticket-row{
+    display:flex;
+    justify-content:space-between;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:6px 0;
+  }
+  .ticket-row .k{color:var(--muted);}
+  .ticket-row .v{color:var(--text);font-weight:500;text-align:right;}
+  .ticket-row .v.urg-alta{color:var(--orange);}
+  .ticket-row .v.urg-critica{color:var(--red);}
+  .ticket-row .v.urg-media{color:var(--amber);}
+  .ticket-row .v.urg-baixa{color:var(--green);}
+
+  .new-report-btn{
+    width:100%;
+    background:transparent;
+    border:1.5px solid var(--border-strong);
+    color:var(--text);
+    border-radius:14px;
+    padding:16px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    cursor:pointer;
+    margin-top:26px;
+  }
+
+  .demo-tag{
+    text-align:center;
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:0.08em;
+    padding:14px 0 22px;
+    text-transform:uppercase;
+    position:relative;
+    z-index:1;
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="radar-sweep" id="radarSweep"></div>
+
+<div class="device">
+  <div class="dispatch-bar">
+    <div class="live"><span class="live-dot"></span>Canal aberto</div>
+    <div>CD MANAUS</div>
+  </div>
+
+  <!-- ============ FORM SCREEN ============ -->
+  <div id="formScreen">
+    <div class="header">
+      <div class="beacon-wrap">
+        <div class="beacon">
+          <div class="beacon-ring"></div>
+          <div class="beacon-ring d2"></div>
+          <div class="beacon-ring d3"></div>
+          <div class="beacon-core" id="beaconCore"></div>
+        </div>
+      </div>
+      <div class="eyebrow">SESMT · Central de Chamados</div>
+      <h1>CIPA<br><span id="titleAccent">Presente</span></h1>
+      <div class="subtitle">Viu algo fora do lugar? Chame agora, direto do local.</div>
+    </div>
+
+    <div class="form-wrap">
+      <div class="console" id="console">
+
+        <div class="field">
+          <label>Quem está reportando</label>
+          <select id="cipeiro">
+            <option value="">Selecione seu nome</option>
+            <option>Mylena Souza da Silva</option>
+            <option>Fabio Fonseca Lisboa</option>
+            <option>Brenno Araujo Magalhes</option>
+            <option>William Brendo Gomes Leal</option>
+            <option>Lara Ketellen Souza Silva</option>
+            <option>Marliany Cardoso de Castro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Setor / Área</label>
+          <select id="setor">
+            <option value="">Selecione o local</option>
+            <option>Recebimento</option>
+            <option>Armazenamento</option>
+            <option>Picking</option>
+            <option>Packing</option>
+            <option>Área das Rotas</option>
+            <option>Expedição</option>
+            <option>Entrada Principal</option>
+            <option>Copa</option>
+            <option>Administrativo</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>O que aconteceu?</label>
+          <div class="pill-grid" id="tipoGrid">
+            <button type="button" class="pill" data-tipo="EPI"><span class="ico">🦺</span>EPI</button>
+            <button type="button" class="pill" data-tipo="Ergonomia"><span class="ico">🧍</span>Ergonomia</button>
+            <button type="button" class="pill" data-tipo="Ordem e Limpeza"><span class="ico">🧹</span>Ordem e Limpeza</button>
+            <button type="button" class="pill" data-tipo="Procedimento"><span class="ico">📋</span>Procedimento</button>
+            <button type="button" class="pill" data-tipo="Sinalização"><span class="ico">🚧</span>Sinalização</button>
+            <button type="button" class="pill" data-tipo="Dano Material"><span class="ico">🔧</span>Dano Material</button>
+            <button type="button" class="pill" data-tipo="Comportamento Inseguro"><span class="ico">🙅</span>Comportamento Inseguro</button>
+            <button type="button" class="pill" data-tipo="Condição Insegura"><span class="ico">⚠️</span>Condição Insegura</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Nível de urgência</label>
+          <div class="urgency-row" id="urgRow">
+            <button type="button" class="urg-btn" data-level="baixa">Baixa</button>
+            <button type="button" class="urg-btn" data-level="media">Média</button>
+            <button type="button" class="urg-btn" data-level="alta">Alta</button>
+            <button type="button" class="urg-btn" data-level="critica">Risco iminente</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Descreva a situação</label>
+          <textarea id="descricao" placeholder="Ex: piso molhado próximo à doca 3, sem sinalização..."></textarea>
+          <div class="waveform" id="waveform">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Foto (opcional)<span class="hint">Ajuda a equipe a entender a situação mais rápido</span></label>
+          <button type="button" class="photo-btn" id="photoBtn">📷 Adicionar foto</button>
+          <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+          <div class="photo-preview" id="photoPreview"><img id="photoImg"></div>
+        </div>
+
+        <button type="button" class="submit-btn" id="submitBtn" disabled>Chamar SESMT agora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRMATION SCREEN ============ -->
+  <div class="confirm-screen" id="confirmScreen">
+    <div class="signal-sent">
+      <div class="ring"></div>
+      <div class="ring d2"></div>
+      <div class="check">✓</div>
+    </div>
+    <div class="confirm-title">Sinal enviado</div>
+    <div class="confirm-sub">A equipe de SESMT foi notificada.</div>
+
+    <div class="ticket">
+      <div class="ticket-num-label">Protocolo</div>
+      <div class="ticket-num" id="ticketNum">#0001</div>
+      <div class="ticket-brand">CIPA Presente · CD Manaus</div>
+
+      <div class="ticket-perf"></div>
+
+      <div class="ticket-row"><span class="k">Data</span><span class="v" id="ticketData">—</span></div>
+      <div class="ticket-row"><span class="k">Reportado por</span><span class="v" id="ticketCipeiro">—</span></div>
+      <div class="ticket-row"><span class="k">Setor</span><span class="v" id="ticketSetor">—</span></div>
+      <div class="ticket-row"><span class="k">Tipo</span><span class="v" id="ticketTipo">—</span></div>
+      <div class="ticket-row"><span class="k">Urgência</span><span class="v" id="ticketUrg">—</span></div>
+    </div>
+
+    <button type="button" class="new-report-btn" id="newReportBtn">Registrar novo chamado</button>
+  </div>
+
+  <div class="demo-tag">CIPA Presente · conectado ao Firebase</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, addDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDoVzHd8_-WAfl-3efYqsUq4Okti-BD4F8",
+    authDomain: "controle-de-acesso---cd-manaus.firebaseapp.com",
+    databaseURL: "https://controle-de-acesso---cd-manaus-default-rtdb.firebaseio.com",
+    projectId: "controle-de-acesso---cd-manaus",
+    storageBucket: "controle-de-acesso---cd-manaus.firebasestorage.app",
+    messagingSenderId: "291376709183",
+    appId: "1:291376709183:web:9d8bdeebf6a83f9b53828a",
+    measurementId: "G-PYZ1SW73F8"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+  const COL = 'cipa_chamados';
+  const CONTADOR_REF = doc(db, 'cipa_meta', 'contador');
+
+  // Incrementa o contador de protocolo de forma atômica (evita números duplicados)
+  async function proximoProtocolo(){
+    return await runTransaction(db, async (transaction)=>{
+      const snap = await transaction.get(CONTADOR_REF);
+      const atual = snap.exists() ? (snap.data().ultimo || 0) : 0;
+      const proximo = atual + 1;
+      transaction.set(CONTADOR_REF, { ultimo: proximo }, { merge: true });
+      return proximo;
+    });
+  }
+  let tipoSelecionado = null;
+  let urgenciaSelecionada = null;
+
+  const urgColors = {
+    baixa: {glow:'#22C55E', soft:'rgba(34,197,94,0.35)'},
+    media: {glow:'#FFB020', soft:'rgba(255,176,32,0.35)'},
+    alta: {glow:'#FF8A3D', soft:'rgba(255,138,61,0.35)'},
+    critica: {glow:'#FF4B4B', soft:'rgba(255,75,75,0.4)'}
+  };
+  const defaultGlow = {glow:'#4C6BFF', soft:'rgba(76,107,255,0.35)'};
+
+  function setGlow(level){
+    const c = level ? urgColors[level] : defaultGlow;
+    document.documentElement.style.setProperty('--glow', c.glow);
+    document.documentElement.style.setProperty('--glow-soft', c.soft);
+  }
+
+  document.querySelectorAll('.pill').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      tipoSelecionado = btn.dataset.tipo;
+      validarForm();
+    });
+  });
+
+  document.querySelectorAll('.urg-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.urg-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      urgenciaSelecionada = btn.dataset.level;
+      setGlow(urgenciaSelecionada);
+      validarForm();
+    });
+  });
+
+  const cipeiroSel = document.getElementById('cipeiro');
+  const setorSel = document.getElementById('setor');
+  const descricao = document.getElementById('descricao');
+  const submitBtn = document.getElementById('submitBtn');
+  const waveform = document.getElementById('waveform');
+
+  descricao.addEventListener('focus', ()=> waveform.classList.add('active'));
+  descricao.addEventListener('blur', ()=> waveform.classList.remove('active'));
+
+  [cipeiroSel, setorSel, descricao].forEach(el=>{
+    el.addEventListener('input', validarForm);
+    el.addEventListener('change', validarForm);
+  });
+
+  function validarForm(){
+    const ok = cipeiroSel.value && setorSel.value && tipoSelecionado && urgenciaSelecionada && descricao.value.trim().length > 4;
+    submitBtn.disabled = !ok;
+  }
+
+  document.getElementById('photoBtn').addEventListener('click', ()=>{
+    document.getElementById('photoInput').click();
+  });
+  document.getElementById('photoInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      document.getElementById('photoImg').src = ev.target.result;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoBtn').textContent = '📷 Foto adicionada — trocar';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const urgLabels = {baixa:'Baixa', media:'Média', alta:'Alta', critica:'Risco iminente'};
+
+  submitBtn.addEventListener('click', async ()=>{
+    submitBtn.disabled = true;
+    const textoOriginal = submitBtn.textContent;
+    submitBtn.textContent = 'Enviando...';
+
+    try{
+      const protoNum = await proximoProtocolo();
+      const protoStr = String(protoNum).padStart(4,'0');
+      const now = new Date();
+      const dataISO = now.toISOString().slice(0,10);
+      const dataFmt = now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+
+      await addDoc(collection(db, COL), {
+        proto: protoStr,
+        tipo: tipoSelecionado,
+        urgencia: urgenciaSelecionada,
+        setor: setorSel.value,
+        cipeiro: cipeiroSel.value,
+        dataISO: dataISO,
+        dataFmt: dataFmt,
+        status: 'aberto',
+        desc: descricao.value.trim(),
+        checklist: [],
+        criadoEm: serverTimestamp()
+        // Nota: a foto ainda não é enviada — fica só na pré-visualização local.
+        // Para persistir a foto seria necessário o Firebase Storage.
+      });
+
+      document.getElementById('ticketNum').textContent = '#' + protoStr;
+      document.getElementById('ticketData').textContent = dataFmt;
+      document.getElementById('ticketCipeiro').textContent = cipeiroSel.value;
+      document.getElementById('ticketSetor').textContent = setorSel.value;
+      document.getElementById('ticketTipo').textContent = tipoSelecionado;
+
+      const urgEl = document.getElementById('ticketUrg');
+      urgEl.textContent = urgLabels[urgenciaSelecionada];
+      urgEl.className = 'v urg-' + urgenciaSelecionada;
+
+      document.getElementById('formScreen').style.display = 'none';
+      document.getElementById('confirmScreen').style.display = 'flex';
+    }catch(err){
+      console.error('Erro ao enviar chamado:', err);
+      alert('Não foi possível enviar o chamado. Verifique sua conexão e tente novamente.');
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = textoOriginal;
+    }
+  });
+
+  document.getElementById('newReportBtn').addEventListener('click', ()=>{
+    document.getElementById('formScreen').style.display = 'block';
+    document.getElementById('confirmScreen').style.display = 'none';
+    setGlow(null);
+
+    cipeiroSel.value = '';
+    setorSel.value = '';
+    descricao.value = '';
+    tipoSelecionado = null;
+    urgenciaSelecionada = null;
+    document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.urg-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoBtn').textContent = '📷 Adicionar foto';
+    submitBtn.disabled = true;
+  });
+</script>
+
+</body>
+</html>
